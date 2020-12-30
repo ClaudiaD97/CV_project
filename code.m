@@ -34,14 +34,59 @@ imshow(img_res,'initialmagnification',1000)
 quota_training=0.85;
 [trainingSet,validationSet] = splitEachLabel(trainData,quota_training,'randomize');
 
+
+
+layers = [
+    imageInputLayer([64 64 1],'Name','input') 
+    
+    convolution2dLayer(3,8,'Padding','same','Name','conv_1') 
+    
+    reluLayer('Name','relu_1')
+
+    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
+    
+    convolution2dLayer(3,16,'Padding','same','Name','conv_2')
+    reluLayer('Name','relu_2')
+    
+    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
+    
+    convolution2dLayer(3,32,'Padding','same','Name','conv_3')
+    reluLayer('Name','relu_3')
+   
+    fullyConnectedLayer(15,'Name','fc_1')
+    
+    % to get probabilities use softmax
+    softmaxLayer('Name','softmax')
+    %output layer
+    classificationLayer('Name','output')];
+
+
+options = trainingOptions('sgdm', ... % method is stochastic gradient descent with momentum
+    'InitialLearnRate',0.01, ... % epsilon learning rate
+    'MaxEpochs',5, ... % maximum number of epochs
+    'Shuffle','every-epoch', ... % when to shuffle all training elements
+    'ValidationData',validationSet, ... % which are validation data
+    'ValidationFrequency',10, ... % each 10 minibatches validate the actual network
+    'ValidationPatience',Inf,... % number of time to accept increasing validation error (for early stopping but here i'm not using it)
+    'Verbose',false, ...
+    'MiniBatchSize',128, ... %power of 2 to exploit gpu
+    'ExecutionEnvironment','parallel',... % parallel execution
+    'Plots','training-progress') %show plots during training
+%% 
+% Then we train the network.
+
+% train the net
+net = trainNetwork(trainingSet,layers,options); % actual training
+
+
 % augment just training set (optional 4)
-trainingSet_aug = transform(trainingSet,@randomCropAndResize);
+%trainingSet_aug = transform(trainingSet,@randomCropAndResize);
 % merge with training set
-ts = combine(trainingSet,trainingSet_aug);
+%ts = combine(trainingSet,trainingSet_aug);
 %preview(ts)
-dataOut = read(ts)
-figure
-imshow(imtile(dataOut));
+%dataOut = read(ts)
+%figure
+%imshow(imtile(dataOut));
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
