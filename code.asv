@@ -80,14 +80,8 @@ pretrainedLayers = pretrainedNet.Layers(1:end-3);
 
 % input is 227x227x3 so I need to adjust images
 pretrainedLayers(1)
-trainData.ReadFcn = @(x)readTrain(x);
+trainData.ReadFcn = @(x)readTrain(imread(x));
 [trainingSet,validationSet] = splitEachLabel(trainData,quota_training,'randomize');
-
-%try to read an image
-img = trainingSet.readimage(1); 
-%figure
-%imshow(img,'InitialMagnification',1000)
-% ok it works
 
 % and compose the new net architecture
 layers = [ 
@@ -131,6 +125,15 @@ function[YPredicted, C, accuracy] = evaluateOnTestSet(net,testSet)
     C = confusionmat(YPredicted, YTest);
 end
 
+% data augmentation point 2
+function dataOut = addNoise(data)
+
+dataOut = data;
+for idx = 1:size(data,1)
+   dataOut(idx) = imnoise(data(idx),'salt & pepper');
+end
+
+end
 
 % data augmentation for optional4
 function new_data = randomCropAndResize(data)
@@ -155,11 +158,6 @@ function new_data = randomCropAndResize(data)
         new_data(i) = imresize(new_data(i),[64,64]); % this is isotropic because already a square
     end
     % also small rotation?
-end
-
-function[I] = readTrain(x)
-    img = imresize(imread(x),[227,227]);
-    I = cat(3,img,img,img);
 end
 
 % check this for data augmentation
