@@ -1,11 +1,7 @@
-
-%%%%%%% IMAGE CLASSIFIER BASED ON CNN
+% IMAGE CLASSIFIER BASED ON CNN
 close all force 
 
-% set the seed of the random number generator for reproducibility
-%rng(0)
-
-%% 1) BASELINE
+% 1) BASELINE
 
 % create training set and test set
 TrainDatasetPath = fullfile('Images','train');
@@ -23,10 +19,10 @@ img = trainData.readimage(iimage);
 %figure;
 %imshow(img,'initialmagnification',1000)
 
+
 % in this way automatic resizing when image is accessed (also values in 0-1 and not 0-255)
 %trainData.ReadFcn = @(x)imresize(double(imread(x))/255,[64 64]);
 trainData.ReadFcn = @(x)imresize(imread(x),[64 64]);
-
 % to reset the function execute next line
 % trainData.ReadFcn = @(x)imread(x);
 % important to do the same for TestSet
@@ -40,55 +36,25 @@ quota_training=0.85;
 dataAugmenter = imageDataAugmenter('RandXReflection',true);
 augTrainingSet = augmentedImageDatastore([64,64,1],trainingSet,'DataAugmentation', dataAugmenter)
 
-layers2 = [
+layers = [
     imageInputLayer([64 64 1],'Name','input')
     
-    convolution2dLayer(3,8,'WeightsInitializer','narrow-normal','BiasInitializer', 'zeros','Name','conv_1')
+    convolution2dLayer(3,8,'WeightsInitializer','narrow-normal','Name','conv_1')
     reluLayer('Name','relu_1')
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
     
-    convolution2dLayer(3,16,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','conv_2')
-    reluLayer('Name','relu_2')
-    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
- 
-    convolution2dLayer(3,32,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','conv_3')
-    reluLayer('Name','relu_3')
-   
-    fullyConnectedLayer(15,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','fc_1')
-    
-    softmaxLayer('Name','softmax')
-    classificationLayer('Name','output')];
-
-layers = [
-    imageInputLayer([64 64 1],'Name','input') 
-    
-    convolution2dLayer(3,8,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Padding', 'same',...
-                        'Name','conv_1') 
-
-    reluLayer('Name','relu_1')
-    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
-    
-    convolution2dLayer(3,16,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Padding', 'same',...
-                       'Name','conv_2')
+    convolution2dLayer(3,16,'WeightsInitializer','narrow-normal','Name','conv_2')
     reluLayer('Name','relu_2')
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
     
-    convolution2dLayer(3,32,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Padding', 'same',...
-                       'Name','conv_3')
+    convolution2dLayer(3,32,'WeightsInitializer','narrow-normal','Name','conv_3')
     reluLayer('Name','relu_3')
    
-    fullyConnectedLayer(15,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Name','fc_1')
-    
+    fullyConnectedLayer(15,'WeightsInitializer','narrow-normal','Name','fc_1')
+       
     softmaxLayer('Name','softmax')
     classificationLayer('Name','output')];
+
 
 options = trainingOptions('sgdm', ... % method is stochastic gradient descent with momentum
     'ValidationData',validationSet, ... % which are validation data
@@ -104,7 +70,8 @@ options = trainingOptions('sgdm', ... % method is stochastic gradient descent wi
 %[predictions, confusionMatrix, testAccuracy] = evaluateOnTestSet(net,testData)
 
 
-%% 3) TRANSFER LEARNING
+
+% 3) TRANSFER LEARNING
 
 pretrainedNet = alexnet;
 analyzeNetwork(pretrainedNet)
@@ -113,14 +80,8 @@ pretrainedLayers = pretrainedNet.Layers(1:end-3);
 
 % input is 227x227x3 so I need to adjust images
 pretrainedLayers(1)
-trainData.ReadFcn = @(x)readTrain(x);
+trainData.ReadFcn = @(x)readTrain(imread(x));
 [trainingSet,validationSet] = splitEachLabel(trainData,quota_training,'randomize');
-
-%try to read an image
-img = trainingSet.readimage(1); 
-%figure
-%imshow(img,'InitialMagnification',1000)
-% ok it works
 
 % and compose the new net architecture
 layers = [ 
@@ -164,6 +125,15 @@ function[YPredicted, C, accuracy] = evaluateOnTestSet(net,testSet)
     C = confusionmat(YPredicted, YTest);
 end
 
+% data augmentation point 2
+function dataOut = addNoise(data)
+
+dataOut = data;
+for idx = 1:size(data,1)
+   dataOut(idx) = imnoise(data(idx),'salt & pepper');
+end
+
+end
 
 % data augmentation for optional4
 function new_data = randomCropAndResize(data)
@@ -188,11 +158,6 @@ function new_data = randomCropAndResize(data)
         new_data(i) = imresize(new_data(i),[64,64]); % this is isotropic because already a square
     end
     % also small rotation?
-end
-
-function[I] = readTrain(x)
-    img = imresize(imread(x),[227,227]);
-    I = cat(3,img,img,img);
 end
 
 % check this for data augmentation
