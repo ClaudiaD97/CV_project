@@ -1,8 +1,9 @@
+
 % IMAGE CLASSIFIER BASED ON CNN
 close all force 
 
 % set the seed of the random number generator for reproducibility
-rng(0)
+%rng(0)
 
 % create training set and test set
 TrainDatasetPath = fullfile('Images','train');
@@ -15,17 +16,17 @@ countEachLabel(trainData)
 % print an image
 iimage=1;
 img = trainData.readimage(iimage); 
-figure;
-imshow(img,'initialmagnification',1000)
+%figure;
+%imshow(img,'initialmagnification',1000)
 
 % input image should be 64x64, apply anisotropic rescaling
 img_res = imresize(img,[64,64]);
 size(img_res)
-figure
-imshow(img_res,'initialmagnification',1000)
+%figure
+%imshow(img_res,'initialmagnification',1000)
 
 % in this way automatic resizing when image is accessed (also values in 0-1 and not 0-255)
-%trainData.ReadFcn = @(x)double(imresize(imread(x),[64 64]))/256;
+trainData.ReadFcn = @(x)double(imresize(imread(x),[64 64]))/256;
 
 % to reset the function execute next line
 % trainData.ReadFcn = @(x)imread(x);
@@ -36,32 +37,74 @@ quota_training=0.85;
 
 
 
-layers = [
+layers2 = [
     imageInputLayer([64 64 1],'Name','input') 
     
-    convolution2dLayer(3,8,'Padding','same','Name','conv_1') 
+    convolution2dLayer(3,8,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros', 'Name','conv_1') 
     
     reluLayer('Name','relu_1')
 
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
     
-    convolution2dLayer(3,16,'Padding','same','Name','conv_2')
+    convolution2dLayer(3,16,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','conv_2')
     reluLayer('Name','relu_2')
     
     maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
     
-    convolution2dLayer(3,32,'Padding','same','Name','conv_3')
+    convolution2dLayer(3,32,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','conv_3')
     reluLayer('Name','relu_3')
    
-    fullyConnectedLayer(15,'Name','fc_1')
+    fullyConnectedLayer(15,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','fc_1')
     
     % to get probabilities use softmax
     softmaxLayer('Name','softmax')
     %output layer
     classificationLayer('Name','output')];
 
+layers = [
+    imageInputLayer([64 64 1],'Name','input') 
+    
+    convolution2dLayer(3,8,'WeightsInitializer', 'narrow-normal', ...
+                        'BiasInitializer', 'zeros',...
+                        'Padding', 'same',...
+                        'Name','conv_1') 
+   
+    reluLayer('Name','relu_1')
 
-options = trainingOptions('sgdm', ... % method is stochastic gradient descent with momentum
+    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
+    
+    convolution2dLayer(3,16,'WeightsInitializer', 'narrow-normal', ...
+                        'BiasInitializer', 'zeros',...
+                        'Padding', 'same',...
+                       'Name','conv_2')
+    
+    reluLayer('Name','relu_2')
+    
+    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
+    
+    convolution2dLayer(3,32,'WeightsInitializer', 'narrow-normal', ...
+                        'BiasInitializer', 'zeros',...
+                        'Padding', 'same',...
+                       'Name','conv_3')
+    
+    reluLayer('Name','relu_3')
+   
+    fullyConnectedLayer(15,'WeightsInitializer', 'narrow-normal', ...
+                        'BiasInitializer', 'zeros',...
+                        'Name','fc_1')
+    
+    % to get probabilities use softmax
+    softmaxLayer('Name','softmax')
+    %output layer
+    classificationLayer('Name','output')];
+
+options = trainingOptions('adam', ... % method is stochastic gradient descent with momentum
+    'InitialLearnRate',0.1, ...
+    'ValidationData',validationSet, ... % which are validation data
+    'MiniBatchSize',32, ... %power of 2 to exploit gpu
+    'Plots','training-progress') %show plots during training
+
+options2 = trainingOptions('sgdm', ... % method is stochastic gradient descent with momentum
     'InitialLearnRate',0.01, ... % epsilon learning rate
     'MaxEpochs',5, ... % maximum number of epochs
     'Shuffle','every-epoch', ... % when to shuffle all training elements
