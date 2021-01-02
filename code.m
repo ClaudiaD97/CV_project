@@ -40,7 +40,7 @@ quota_training=0.85;
 dataAugmenter = imageDataAugmenter('RandXReflection',true);
 augTrainingSet = augmentedImageDatastore([64,64,1],trainingSet,'DataAugmentation', dataAugmenter)
 
-layers2 = [
+layers = [
     imageInputLayer([64 64 1],'Name','input')
     
     convolution2dLayer(3,8,'WeightsInitializer','narrow-normal','BiasInitializer', 'zeros','Name','conv_1')
@@ -55,37 +55,6 @@ layers2 = [
     reluLayer('Name','relu_3')
    
     fullyConnectedLayer(15,'WeightsInitializer', 'narrow-normal', 'BiasInitializer', 'zeros','Name','fc_1')
-    
-    softmaxLayer('Name','softmax')
-    classificationLayer('Name','output')];
-
-layers = [
-    imageInputLayer([64 64 1],'Name','input') 
-    
-    convolution2dLayer(3,8,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Padding', 'same',...
-                        'Name','conv_1') 
-
-    reluLayer('Name','relu_1')
-    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
-    
-    convolution2dLayer(3,16,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Padding', 'same',...
-                       'Name','conv_2')
-    reluLayer('Name','relu_2')
-    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
-    
-    convolution2dLayer(3,32,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Padding', 'same',...
-                       'Name','conv_3')
-    reluLayer('Name','relu_3')
-   
-    fullyConnectedLayer(15,'WeightsInitializer', 'narrow-normal', ...
-                        'BiasInitializer', 'zeros',...
-                        'Name','fc_1')
     
     softmaxLayer('Name','softmax')
     classificationLayer('Name','output')];
