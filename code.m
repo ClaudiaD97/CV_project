@@ -59,6 +59,9 @@ layers = [
     softmaxLayer('Name','softmax')
     classificationLayer('Name','output')];
 
+lgraph = layerGraph(layers); % to run the layers need a name
+    analyzeNetwork(lgraph)
+    
 options = trainingOptions('sgdm', ... % method is stochastic gradient descent with momentum
     'ValidationData',validationSet, ... % which are validation data
     'MiniBatchSize',32, ... %power of 2 to exploit gpu
@@ -67,10 +70,10 @@ options = trainingOptions('sgdm', ... % method is stochastic gradient descent wi
 
 
 % train the network
-%net = trainNetwork(trainingSet,layers,options);
+net = trainNetwork(trainingSet,layers,options);
 
 % to evaluate accuracy on test set use this function defined below
-%[predictions, confusionMatrix, testAccuracy] = evaluateOnTestSet(net,testData)
+[predictions, confusionMatrix, testAccuracy] = evaluateOnTestSet(net,testData)
 
 
 %% 3) TRANSFER LEARNING
@@ -101,13 +104,14 @@ layers = [
 %training  options
 options = trainingOptions('sgdm', ... 
     'ValidationData',validationSet, ...
-    'MiniBatchSize',32, ... 
+    'MiniBatchSize',128, ... 
+    'MaxEpochs',5, ...
     'ExecutionEnvironment','parallel',...
     'Plots','training-progress');
 
 %actual training
-fineTunedNet = trainNetwork(trainingSet,layers,options)
-[predictions, confusionMatrix, testAccuracy] = evaluateOnTestSet(net,testData);
+%fineTunedNet = trainNetwork(trainingSet,layers,options)
+%[predictions, confusionMatrix, testAccuracy] = evaluateOnTestSet(net,testData);
 
 
 % 4) AUGMENT DATASET 
