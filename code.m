@@ -24,13 +24,14 @@ img = trainData.readimage(iimage);
 %imshow(img,'initialmagnification',1000)
 
 % in this way automatic resizing when image is accessed (also values in 0-1 and not 0-255)
-%trainData.ReadFcn = @(x)imresize(double(imread(x))/255,[64 64]);
-trainData.ReadFcn = @(x)imresize(imread(x),[64 64]);
+trainData.ReadFcn = @(x)imresize(double(imread(x))/255,[64 64]);
+%trainData.ReadFcn = @(x)imresize(imread(x),[64 64]);
 
 % to reset the function execute next line
 % trainData.ReadFcn = @(x)imread(x);
 % important to do the same for TestSet
-testData.ReadFcn = @(x)imresize(imread(x),[64,64]);
+%testData.ReadFcn = @(x)imresize(imread(x),[64,64]);
+trainData.ReadFcn = @(x)imresize(double(imread(x))/255,[64 64]);
 
 % now divide real training set and validation set
 quota_training=0.85;
@@ -59,10 +60,37 @@ layers = [
     softmaxLayer('Name','softmax')
     classificationLayer('Name','output')];
 
+
+layers2 = [
+    imageInputLayer([64 64 1],'Name','input') 
+    
+    convolution2dLayer(3,8, 'Padding', 'same',...
+                        'WeightsInitializer', @(sz) randn(sz),...
+                        'BiasInitializer', @(sz) rand(sz)*0.000,...
+                        'Name','conv_1') 
+
+    reluLayer('Name','relu_1')
+    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_1')
+    
+    convolution2dLayer(3,16, 'Padding', 'same',...
+                       'Name','conv_2')
+    reluLayer('Name','relu_2')
+    maxPooling2dLayer(2,'Stride',2,'Name','maxpool_2')
+    
+    convolution2dLayer(3,32,'Padding', 'same',...
+                       'Name','conv_3')
+    reluLayer('Name','relu_3')
+   
+    fullyConnectedLayer(15,'Name','fc_1')
+    
+    softmaxLayer('Name','softmax')
+    classificationLayer('Name','output')];
+
 lgraph = layerGraph(layers); % to run the layers need a name
     analyzeNetwork(lgraph)
     
 options = trainingOptions('sgdm', ... % method is stochastic gradient descent with momentum
+    'MaxEpochs',20, ... 
     'ValidationData',validationSet, ... % which are validation data
     'MiniBatchSize',32, ... %power of 2 to exploit gpu
     'ExecutionEnvironment','parallel',... % parallel execution
@@ -70,7 +98,7 @@ options = trainingOptions('sgdm', ... % method is stochastic gradient descent wi
 
 
 % train the network
-net = trainNetwork(trainingSet,layers,options);
+net = trainNetwork(trainingSet,layers2,options);
 
 % to evaluate accuracy on test set use this function defined below
 [predictions, confusionMatrix, testAccuracy] = evaluateOnTestSet(net,testData)
