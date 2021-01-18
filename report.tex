@@ -24,7 +24,7 @@
 The aim of this project is to build a multiclass image classifier based on convolutional neural networks for the provided dataset (ref). 15 categories are present already divided into trainset (1500 images, 100 per category) and test set (2985 images).
 	
 	
-\section{Baseline}
+\section*{1. Baseline}
 \subsection*{Problem statement}
 	
 As initial thing we build a first CNN which act as a baseline. Its performance are then compared with the results of some improved CNNs (section 2) and other classifiers based on pretrained CNNs (section 3).
@@ -74,12 +74,12 @@ The weights of each layer have been initialized with a gaussian distribution wit
 
 Setting the parameters in this way, we were not able to reach a test accuracy of around 30\%. Indeed our network performed as a random classifier, having a test accuracy of less then 7\%. In particular the specified weights were too high for the last two layers using the default learning rate. To reach a statisfactory accuracy, using the required weight initialization, a smaller learning rate was necessary, so we set it to 0.001.
 
-We employed, as a stopping criterion, the early stoppung. We've made this choice because, even if we may not reach the global minimum of the validation loss, we can train for fewer epochs stopping when the validation loss significantly increase.\\
-In our specific implementation we evaluate the validation loss every 5 iterations. At each iteration we compare the validation loss with the best one obtained up to that moment. If the current loss is higher then the saved one, we increase a counted. On the other hand, if the current loss is lower then the saved one we update it, save the parameters of the network and set the counter to zero. We stop the training when a certain number of epochs are performed or when the counter reach the value of the patiecnce. In our case we have decided to perform at most $30$ epochs and set the patience to $15$
+We employed, as a stopping criterion, the early stopping based on the validation loss which is a measure of the generalization error of our classifier. We've made this choice because, even if we may not reach the global minimum of the validation loss, we can train for fewer epochs stopping when the validation loss significantly increase.\\
+In our specific implementation we evaluate the validation loss every 5 iterations. At each iteration we compare the validation loss with the best one obtained up to that moment. If the current loss is higher then the saved one, we increase a counted. On the other hand, if the current loss is lower then the saved one we update it, save the parameters of the network and set the counter to zero. We stop the training when a certain number of epochs are performed or when the counter reach the value of the patience. In our case we have decided to perform at most $30$ epochs and set the patience to $15$
 	
 \subsection*{Results}
 
-We performed the training as specified above and plot the evolution of the accuracy and of the loss.
+We performed the training as specified above and plot the evolution of the accuracy and of the loss on both training and validation data.
 
 \begin{figure}[h!]
 	\centering
@@ -89,7 +89,7 @@ We performed the training as specified above and plot the evolution of the accur
 	\label{fig:baselineloss}
 \end{figure}
 
-\section{CNN improvements}
+\section*{2. CNN improvements}
 \subsection*{Problem statement}
 After having developed a CNN which act as a baseline, we tried to improve the obtained results. In order to do so we applied some transformation to the training data, added some layers and changed some optimizaion parameters. After having found the optimal network we have also build an ensemble of networks.
 
