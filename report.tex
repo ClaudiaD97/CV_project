@@ -85,8 +85,8 @@ We performed the training as specified above and plot the evolution of the accur
 
 \begin{figure}[h!]
 	\centering
-%	{\includegraphics[width=.49\textwidth]{img/baselineAcc}}
-%	{\includegraphics[width=.49\textwidth]{img/baselineLoss}}
+	{\includegraphics[width=.49\textwidth]{img/baselineAcc}}
+	{\includegraphics[width=.49\textwidth]{img/baselineLoss}}
 	\caption{Training and validation accuracy and loss of the baseline}
 	\label{fig:baseline}
 \end{figure}
@@ -94,11 +94,11 @@ We performed the training as specified above and plot the evolution of the accur
 As we can see the training accuracy tends to increase linearly reaching the value of 0.6 before the stop of the training. Looking at the the validation accuracy we notice that, during the first epochs, it takes values similar to the ones of the training accuracy, but after $400$ iterations it begins to be a bit lower then the training metric, stabilizing around values of 0.3.\\
 In the same way we can see that the training loss descreases reaching a minimum of around $1.5$. On the other hand the validation loss decreases very slowly and, after $14$ epochs it begins to increase. Hence the training stopped.
 
-We tested the network on the test set obtaining an accuracy of around 31\%. But we've observed a lot of variability in this result and sometimes we get lower values around 28-29\%. 
+We tested the network on the test set obtaining an accuracy of around 31\%. But we've observed a lot of variability in this result: we get values in between 26-32\%. 
 
 \begin{figure}[h!]
 	\centering
-%	\includegraphics[width=0.9\textwidth]{img/baselineConf}
+	\includegraphics[width=0.9\textwidth]{img/baselineConf}
 	\caption{Confusion matrix of the baseline}
 	\label{fig:baselinecmatrix}
 \end{figure}
@@ -415,6 +415,8 @@ First let's discuss the construction of the decision tree, then we will focus on
 \end{description}
 
 Now we are able to train all the pairwise svm, build the decision tree and evaluate the classifier on the test set.
+
+
 
 \subsubsection*{Results}
 Using the classifier with the linear kernel gives us a test accuracy of about 87\%:
