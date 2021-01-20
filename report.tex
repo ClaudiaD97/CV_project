@@ -226,7 +226,7 @@ The confusion matrix (Figure \ref{fig:improvedcmatrix}) confirms the good perfor
 
 \subsection*{Ensemble of networks}
 
-Our improved convolutional neural network performed good enough but its results were quite unstable varying between 62\% and 67\% of test accuracy. Hence, in order to reduce the dependence of the CNN on the training data and on the initialization of the weights, and so reduce the variance of the predictions, we build an esemble of networks, which is to say we build and train several models and combine their predictions together.
+Our improved convolutional neural network performed good enough but its results were quite unstable varying between 62\% and 67\% of test accuracy. Hence, in order to reduce the dependence of the CNN on the initialization of the weights, and so reduce the variance of the predictions, we build an esemble of networks, which is to say we build and train several models and combine their predictions together.
 
 We initialized five instances of neural network having the structure specified above and trained them independently. After the training phase we test each network on the test set. We apply each network to each image and make a softmax transformation in order to convert the output scores into probabilities. At this point we calculate the average probability of each class computing the arithmetic mean of the output probabilities of the networks. Finally we predict the class having the higher average probability.
 
