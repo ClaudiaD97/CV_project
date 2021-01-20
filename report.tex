@@ -21,31 +21,35 @@
 \begin{document}
 \chapter*{Project 3}
 		
-The aim of this project is to build a multiclass image classifier based on convolutional neural networks for the provided dataset (ref). 15 categories are present already divided into trainset (1500 images, 100 per category) and test set (2985 images).
+The aim of this project is to build a multiclass image classifier based on convolutional neural networks for the provided dataset (\cite{Lazebnik et al., 2006}). 15 categories are present and already divided into trainset (1500 images, 100 per category) and test set (2985 images).
+
+In the first place we build a CNN which act as a baseline (Section 1). Its performance are then compared with the results of some improved CNNs (Section 2) and other classifiers based on pretrained CNNs (Section 3).
 	
 	
 \section*{1. Baseline}
 \subsection*{Problem statement}
-	
-As initial thing we build a first CNN which act as a baseline. Its performance are then compared with the results of some improved CNNs (section 2) and other classifiers based on pretrained CNNs (section 3).
-	
+
+To begin we built a CNN which act as baseline following the given instructions.	
+
 \subsection*{Approach}
 
 First of all we  defined the structurs needed to feed the network with our data.\\
-Specifically we built a new Dataset class which, every time an image is accessed, loads the image itself in memory and apply a given transformation to it.\\
-Then, after having splitted the training dataset into train and validation data, we construcetd two dataloaders which, at each epoch, take care of divide data in batches and give them to the network. The same approach is also used for test data.
+Specifically we built a new Dataset class which, every time an image is accessed, loads the image itself in memory and applies a given transformation to it.\\
+Then, we splitted the training dataset into train and validation and we construcetd two dataloaders which, at each epoch, take care of dividing data in batches and give them to the network. The same approach is also used for test data.
 
-After having defined the needed structures we buil a convolutional neural network following the requests, we trained it and finally test it.
+After having defined the needed structures we built a convolutional neural network following the requests, we trained it and finally tested it.
 	
 \subsection*{Implementation choices}
 
-In order to obtain images having size 64x64, we defined a transformation, consisting in an anisotropic rescaling, to apply to each image when loaded.\\
+In order to obtain images having size 64x64, we defined a transformation, consisting in an anisotropic rescaling, to apply to each image when loaded.
+
 Then, to build the training and the validation dataloaders, we split the given dataset in two parts. The validation dataloader access to the 15\% of the images, equally distributed among the classes, and load them all at once. The traning dataloader access the remaining 85\% of the data, which are loaded in batches of size 32, as required.
 
-After that we've built the network following the given architecture:
+After that we've built the network following the given architecture which is reported in Table \ref{tab:baseline}. Since we've used cross entropy as loss function, and in python this loss already performs softmax, the corresponding layer is not present in the network. Hence the outputs of the network are scores and not probabilities.
 	
 \begin{table}[h!]
 	\centering
+	\caption{Structure of the baseline CNN}
 	\begin{tabular}{lll}
 		\# & Type & Size \\
 		\midrule
@@ -65,57 +69,107 @@ After that we've built the network following the given architecture:
 		\label{tab:baseline}
 	\end{tabular}
 \end{table}
-	
-Since we've used cross entropy as loss function, and in python this loss already performs softmax, the corresponding layer is not present in the network. So the output of the network are scores and not probabilities.
-	
+		
 As optimizer we've employed the stochastic gradient descent with learning rate 0.01, momentum 0.9, as set by default.
 	
 The weights of each layer have been initialized with a gaussian distribution with mean 0 and standard deviation 0.01. The bias of each layer has been set to 0.
 
-Setting the parameters in this way, we were not able to reach a test accuracy of around 30\%. Indeed our network performed as a random classifier, having a test accuracy of less then 7\%. In particular the specified weights were too high for the last two layers using the default learning rate. To reach a statisfactory accuracy, using the required weight initialization, a smaller learning rate was necessary, so we set it to 0.001.
+By setting the parameters in this way, we were not able to reach a test accuracy of around 30\%. Indeed our network performed as a random classifier, having a test accuracy of less then 7\%. In particular the specified weights were too high for the last two layers using the default learning rate. To reach a statisfactory accuracy, using the required weight initialization, a smaller learning rate was necessary, so we set it to 0.001.
 
 We employed, as a stopping criterion, the early stopping based on the validation loss which is a measure of the generalization error of our classifier. We've made this choice because, even if we may not reach the global minimum of the validation loss, we can train for fewer epochs stopping when the validation loss significantly increase.\\
-In our specific implementation we evaluate the validation loss every 5 iterations. At each iteration we compare the validation loss with the best one obtained up to that moment. If the current loss is higher then the saved one, we increase a counted. On the other hand, if the current loss is lower then the saved one we update it, save the parameters of the network and set the counter to zero. We stop the training when a certain number of epochs are performed or when the counter reach the value of the patience. In our case we have decided to perform at most $30$ epochs and set the patience to $15$
+In our specific implementation we evaluate the validation loss every 5 iterations. At each iteration we compare the validation loss with the best one obtained up to that moment. If the current loss is at least 1\% higher then the saved one, we increase a counter. On the other hand, if the current loss is lower then the saved one we update it, save the parameters of the network and set the counter to zero. We stop the training when a certain number of epochs are performed or when the counter reach the value of the patience. In our case we have decided to perform at most $30$ epochs and set the patience to $20$.
 	
 \subsection*{Results}
 
-We performed the training as specified above and plot the evolution of the accuracy and of the loss on both training and validation data.
+We performed the training as specified above and plot the evolution of the accuracy and of the loss on both training and validation data (Figure \ref{fig:baseline}).
 
 \begin{figure}[h!]
 	\centering
-	%{\includegraphics[width=.49\textwidth]{img/baseline_accuracy}}
-	\label{fig:baselineaccuracy}
-	%{\includegraphics[width=.49\textwidth]{img/baseline_loss}}
-	\label{fig:baselineloss}
+%	{\includegraphics[width=.49\textwidth]{img/baselineAcc}}
+%	{\includegraphics[width=.49\textwidth]{img/baselineLoss}}
+	\caption{Training and validation accuracy and loss of the baseline}
+	\label{fig:baseline}
 \end{figure}
 
+As we can see the training accuracy tends to increase linearly reaching the value of 0.6 before the stop of the training. Looking at the the validation accuracy we notice that, during the first epochs, it takes values similar to the ones of the training accuracy, but after $400$ iterations it begins to be a bit lower then the training metric, stabilizing around values of 0.3.\\
+In the same way we can see that the training loss descreases reaching a minimum of around $1.5$. On the other hand the validation loss decreases very slowly and, after $14$ epochs it begins to increase. Hence the training stopped.
+
+We tested the network on the test set obtaining an accuracy of around 31\%. But we've observed a lot of variability in this result and sometimes we get lower values around 28-29\%. 
+
+\begin{figure}[h!]
+	\centering
+%	\includegraphics[width=0.9\textwidth]{img/baselineConf}
+	\caption{Confusion matrix of the baseline}
+	\label{fig:baselinecmatrix}
+\end{figure}
+
+Looking at the confusion matrix (Figure \ref{fig:baselinecmatrix}) we notice that there are some misclassifications.
+
 \section*{2. CNN improvements}
+
 \subsection*{Problem statement}
-After having developed a CNN which act as a baseline, we tried to improve the obtained results. In order to do so we applied some transformation to the training data, added some layers and changed some optimizaion parameters. After having found the optimal network we have also build an ensemble of networks.
+After having developed a CNN which acts as a baseline, we tried to improve the obtained results. In order to do so we applied some transformation to the training data, added some layers and changed some optimizaion parameters. After having found the optimal network we have also build an ensemble of networks.
 
-\subsection*{Description of the approach}
-First of all we perform data augmentation. Since the training set is quite small and only contains 1500 images, applying some random transformations on the original data set allows to increase the diversity of the training set itself. In this specific case we apply a random horizontal flip to each image in the training set only, while the validation and the test sets remain the same.
+\subsection*{2.1 Data augmentation}
 
-After that we added some layers to the baseline network.\\
-Specifically we added a Batch Normalization layer before each reLu layer. In this way the following transformation is applied to the output of the preceding layer:
+First of all we perform data augmentation. Since the training set is quite small and only contains $1500$ images, applying some random transformations on the original data set allows to increase the diversity of the training set itself. In this specific case we applied a horizontal flip to each image in the training set only, while the validation and the test sets remained the same.
+
+We tried two different approach. Firstly we defined a new transformation performing a random horizontal flip with probability $0.5$ and we passed it to the trainloader. In this way the transformation is applied with probability $0.5$ to each image every time it is accessed. Hence at each epoch the images are augmented but their number does not increase. Neverthelss we didn't obtain the expected results. Therefore we tried another approach which is to say we actually doubeled the training set. 
+
+We defined a new transformation always performing the horizontal flip. During the training we applied this transformation to each batch and concatenate the transformed batch to the original one. In this way the dimension of each batch double because half of it are the original images and the other half the flipped ones.
+
+We perform the training keeping the options as for the baseline and we obtain the following results (Figure \ref{fig:augmented}).
+
+\begin{figure}[h!]
+	\centering
+	{\includegraphics[width=.49\textwidth]{img/aug_accuracy}}
+	{\includegraphics[width=.49\textwidth]{img/aug_loss}}
+	\caption{Training and validation accuracy and loss of the basline with data augmentation}
+	\label{fig:augmented}
+\end{figure}
+
+We can see that the trend of the metrics is similar to the previous one. Neverthelss all of them seems to perform better. In fact both the training and the validation accuracy are slightly higher then in the baseline whereas the training and the validation loss are a bit lower. 
+
+We test our network on the test set and, as expected, we obtained better results.\\
+The test accuracy of this network is around 37\%, which is to say almost 7-8\% better then the baseline.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/aug_cmatrix}
+	\caption{Confusion matrix of the baseline with data augmentation}
+	\label{fig:augcmatrix}
+\end{figure}
+
+Looking at the confusion matrix (Figure \ref{fig:augcmatrix}) we can see that there are still some misclassifiactions. Expecially the network classifies the 'Open County' as 'Coast' quite often. Nevertheless they are both natural environments, so the error is quite understandable, evan a human being could get them wrong.
+
+\subsection*{2.2 Other improvements}
+
+\subsubsection*{Description of the approach}
+
+After having performed data augmentation we added other layers to the network and changed the optimization parameters in order to obtain better results.
+
+First of all we added a Batch Normalization layer before each reLu layer. In this way the following transformation is applied to the output of the preceding layer:
 $$ y = \frac{x - E[x]}{\sqrt{VAR[x]}} * \gamma + \beta$$
-The mean $E[x]$ and the standard-deviation $\sqrt{VAR[x]}$ are calculated over the mini-batches and their estimations are then employed during the evaluation phase to normalize the input images. The two parameters $\gamma$ and $\beta$ are vectors of size equal to the input size learned during the training. Thanks to the addition of this layer we avoid divergence of the optimizer due to large changes in the input distribution to each layer. It also reduce dependence on the initialization and acts as a regularizer.\\
-We also add a dropout layer before the fully connected one. In this way, during the training phase, some of the outputs of the layer before are randomly set to zero with a given probability. This technique has proven to be effective for regularization and helps in avoinding overfitting.
+The mean $E[x]$ and the standard-deviation $\sqrt{VAR[x]}$ are calculated over the mini-batches and their estimations are then employed during the evaluation phase to normalize the input images. The two parameters $\gamma$ and $\beta$ are vectors of size equal to the input size learned during the training. Thanks to the addition of this layer we avoid divergence of the optimizer due to large changes in the input distribution to each layer. It also reduce dependence on the initialization and acts as a regularizer.
+
+We also add a dropout layer before the fully connected one. In this way, during the training phase, some of the outputs of the layer before are randomly set to zero with a given probability. This technique has proven to be effective for regularization and helps in avoiding overfitting.
 
 Then we changed the size of the convolutional filters increasing their support, going from intput to output, to 3x3, 5x5 and 7x7. In order to obtain an output image of the same size of the input one, we added some replicate padding around the image itself. Specifically we set one padding in the first convolutional layer, two in the second and three in the third. In this way the image do not change size going through the network.
 
 Finally we changed some of the optimization parameters.\\
-As first thing we introduced weight normalization. Large values of the network weights can lead to unstable performances and can be an indicator of overfitting of the training data set. To avoid this problem we introcuced a regularization term in the objective function which force the network to keep the weight small. In this way the objective function to minimize becomes
+As first thing we introduced weight normalization. Large values of the network weights can lead to unstable performances and can be an indicator of overfitting of the training data set. To avoid this problem we introduced a regularization term in the objective function which force the network to keep the weight small. In this way the objective function to minimize becomes
 $$J(w) = \frac 1 N \sum_{i=1}^n L(f(x_i, w), y_i) + \lambda R(w)$$\\
-In addition we introduced a learning rate scheduler which decays the learning rate by a given factor every $n$ epochs.\
+In addition we tried to modify the value of the learning rate. Increasing its the value to $0.01$ leads the network to not converge to the minimum because the steps are too big. On the other hand, setting it to smaller values, such as $0.0001$, brings to very slow convergence. Hence, since we would like to have a bigger value of the learning rate at the beginning of the training in order to move closer to the minimum, and, after some iterations, a smaller value in order to reach the minimum itself, we introduced a learning rate scheduler. The scheduler decays the learning rate by a given factor every $n$ epochs.\\
+After that we modified the batch size setting it to $64$ in order to speed up the computations and obtain a better estimation of the gradient.\\
 As last imporovement we changed the used optimizer switching to Adam optimizer, which is faster than the Stochastic Gradient Descent but is still able to obtain the same performances.
 
-\subsection*{Implementation choices}
-In order to augment the training data we defined a new transformation performing both the needed resize and the random horizontal flip with a probability of $0.5$.\\
+\subsubsection*{Implementation choices}
+
 After having introduced the abouve mentioned additional layers, our improved network had the structure reported in the Table \ref{tab:final}.
 
 \begin{table}[h!]
 	\centering
+	\caption{Structure of the final CNN}
 	\begin{tabular}{lll}
 		\# & Type & Size \\
 		\midrule
@@ -142,43 +196,157 @@ After having introduced the abouve mentioned additional layers, our improved net
 
 The objective function we aim to minimize was 
 $$J(w) = \frac 1 N \sum_{i=1}^n L(f(x_i, w), y_i) + \lambda R(w)$$\\
-where $L(f(x_i, w), y_i)$ is the Cross-entropy loss function and the regularization term $R(w)$ is the $L_2$ penalty. In addition we set the $\lambda$ parameter to $0.02$.\\
+where $L(f(x_i, w), y_i)$ is the Cross-entropy loss function and the regularization term $R(w)$ is the $L_2$ penalty. We set the $\lambda$ parameter to $0.02$.\\
 Concerning the oprimization parameters we set the initial learning rate to $0.001$ and, through the scheduler, it was multiplied by a factor equal to $0.7$ every $3$ epochs. As already said we used Adam as optimizer.\\
 
-\subsection*{Results}
+\subsubsection*{Results}
 
-Keeping the training option as for the baseline, whihc is to say performing an early stop setting the patience to $10$ evaluations, we ran the training and plot the evolution of the accuracy and of the loss.
+We trained the network using the early stopping and setting the patience to $10$ evaluations. we ran the training and plot the evolution of the accuracy and of the loss (Figure \ref{fig:improved}).
 
 \begin{figure}[h!]
 	\centering
 	{\includegraphics[width=.49\textwidth]{img/final_accuracy}}
-	\label{fig:accuracy}
 	{\includegraphics[width=.49\textwidth]{img/final_loss}}
-	\label{fig:loss}
+	\caption{Training and validation accuracy and loss of the improved network}
+	\label{fig:improved}
 \end{figure}
 
-As we can see the training accuracy tends to one, while the validation accuracy is stabilized around the value $0.6$. In a similar way the training loss tends to zero, while the vaidation loss is stabilized around $1$.
+As we can see both the accuracyes and the losses respectivelly increase and decrease much faster then before. Indeed the training accuracy tends to one, while the validation accuracy is stabilized around the value $0.6$. In a similar way the training loss tends to zero, while the vaidation loss is stabilized around $1$. We also noticed that the training stopped because the maximum number of epochs was reached. Therefore we accomplished to reduce overfitting since the validation loss does not increase significalnty even after $30$ epochs.
 
-Subsequently we test the trained network on the test set and we obtained satisfactory results. Indeed we obtained a test Accuracy of 0.6576214405360133.
-
-We also compute the accuracy matrix which confirms the good performances of the network. Even if we still notice some misclassification expecially among Livingroom and Kitchen and few other classes we are quite satisfied with the obtained result.
+We test the trained network on the test set and we obtained satisfactory results. Indeed we get a test accuracy of around 65\%.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.9\textwidth]{img/final_cmatrix_norm}
-	\label{fig:cmatrix}
+	\includegraphics[width=0.9\textwidth]{img/final_cmatrix}
+	\caption{Confusion matrix of the improved network}
+	\label{fig:improvedcmatrix}
 \end{figure}
+
+The confusion matrix (Figure \ref{fig:improvedcmatrix}) confirms the good performances of the network. Even if we still notice some misclassifications expecially among Livingroom and Kitchen and few other classes we are quite satisfied with the obtained result.
 
 \subsection*{Ensemble of networks}
 
-Our improved convolutional neural network performed good enough but its results were quite unstable. Hence, in order to  reduce the dependence of the CNN on the training data and so reduce the variance of the predictions, we build an esemble of nwtworks, which is to say we build and train several models and combine their predictions together.
+Our improved convolutional neural network performed good enough but its results were quite unstable varying between 62\% and 67\% of test accuracy. Hence, in order to reduce the dependence of the CNN on the training data and on the initialization of the weights, and so reduce the variance of the predictions, we build an esemble of networks, which is to say we build and train several models and combine their predictions together.
 
-Since our dataset is quite small we employed the bootstrap technique. Specifically, after having divided our data into training and validation, we build the training dataloader by sampling with repetition from the selected images. In this way we are able to train the networks on slightly different datasets without reducing the number of used images.
+We initialized five instances of neural network having the structure specified above and trained them independently. After the training phase we test each network on the test set. We apply each network to each image and make a softmax transformation in order to convert the output scores into probabilities. At this point we calculate the average probability of each class computing the arithmetic mean of the output probabilities of the networks. Finally we predict the class having the higher average probability.
 
-We initialized five instances of neural network having the structure specified above. For each instance we create a different training dataloader using the bootstrap technique which allow us to train them indipendently. After the training phase we test each network on the test set. We apply each network to each image, make a softmax transformation in order to convert the output scores into probabilities. At this point we calculate the average probability of each class computing the arithmetic mean of the output probabilities of the networks. Finally we predict the class having the higher average probability.
+Combining the results of independent networks slightly increase our perormances obtaining a of test accuracy of around 68\%. Nevertheless the main achievements obtainied in this way was the reduced variability of the results. 
 
-Combining the results of independent networks slightly increase our perormances in terms of test accuracy. Nevertheless the main achievements obtainied in this way was the reduced variability of the results. 
+\section*{3 Transfer learning}
+\subsection*{3.1 Fine tuning}
+\subsubsection*{Problem statement}
 
-\section{Transfer learning}
+After having bettered our own neural network we wanted to build a multiclass classifier for our classification problem fine tuning a pretrained convolutional neural network.
+
+\subsubsection*{Approach}
+In order to perform fine tuning we took all layers of the chosen pretrained neural network except the last fully connected layer which we substituted with a new one having suitable output size. It was only needed to learn the weights of this last layer freezing all the others. Finally we evaluated the performance of the trained classifier on the test set using the same testing functions as in Section 1.
+
+\subsubsection*{Implementation choices}
+We choose to use Alexnet, a convolutional neural network trained on the ImageNet dataset (1.2 million high-resolution images belonging to 1000 categories). 
+In the Table \ref{tab:alexnet} we can see the architecture of pretrained Alexnet available on pytorch:
+
+% alexnet architecture 
+\begin{table}[h!]
+	\centering
+	\caption{Structure of Alexnet}
+	\begin{tabular}{lll}
+		\# & Type & Size \\
+		\midrule
+		Features & & \\
+		1 & Image Input & 224x224x3 images \\
+		2 & Convolution & 64 11x11 convolutions with stride 4 \\
+		3 & ReLu & \\
+		4 & Max Pooling & 3x3 max pooling with stride 2 \\
+		5 & Convolution & 192 5x5 convolutions with stride 1 \\
+		6 & ReLu & \\
+		7 & Max Pooling & 3x3 max pooling with stride 2 \\
+		8 & Convolution & 384 3x3 convolutions with stride 1 \\
+		9 & ReLu & \\
+		10 & Convolution & 256 3x3 convolutions with stride 1 \\
+		11 & ReLu & \\
+		12 & Max Pooling & 3x3 max pooling with stride 2 \\
+		\midrule
+		Avgpool & & \\
+		1 & Avg Pooling & output size 6X6\\
+		\midrule
+		Classifier & & \\
+		1 & Dropout & probability 0.5 \\
+		2 & Fully connected & 4096 \\
+		3 & ReLu & \\
+		4 & Dropout & probability 0.5 \\
+		5 & Fully connected & 4096 \\
+		6 & ReLu & \\
+		7 & Fully connected & 1000 \\
+		\bottomrule
+		\label{tab:alexnet}
+	\end{tabular}
+\end{table}
+
+It's composed by 5 convolutional layers and 3 fully connected layers. All these trainable layers except for the last fully connected one are followed by ReLu activation function. Moreover there are also 3 maxpooling layers and an adaptive average pooling layer, which calculates the right size of its kernel to obtain the specified output size.
+
+In order to enter this network, images need to be preprocessed in the same way the training images have been preprocessed. These are the required transformations:
+\begin{itemize}
+	\item the network expects each image to be composed by 3 channels so we used PIL library tools to convert image to RGB (it simply replicates the image 3 times).
+	\item each channel is normalized with vector of means $[0.485, 0.456, 0.406]$ and vector of standard deviations $[0.229, 0.224, 0.225]$.
+	\item resize each image to $[224,224,3]$ performing anisotropic rescaling
+\end{itemize}
+
+In order to perform image preprocessing we use the dataloaders used in Section 1, we only need to change the transformation to be applied when images are loaded.
+
+We substitute the last fully connected layer having output size 1000 with one having output size 15, the number of our classes. In order to train only the last layer we need to pass to the optimizer only the parameters to be learned: weights and bias of this last layer. Then training and test phases are carried on as in Section 1, we are still using cross-entropy loss and stochastic gradient descent with momuntum (learning rate 0.001 and momentum 0.9).
+Also in this case we initialize the weights using a gaussian distribution with mean 0 and standard deviation 0.01.
+
+\subsubsection*{Results}
+
+We use again early stopping based on validation loss to avoid overfitting and reduce the computational cost, setting the patience parameter to 20. Loss and accuracy on training and validation sets are reported in Figure \ref{fig:alexnet}
+
+% two training plots
+\begin{figure}[h!]
+	\centering
+%	{\includegraphics[width=.49\textwidth]{img/loss_finetune}}
+%	{\includegraphics[width=.49\textwidth]{img/acc_finetune.png}}
+	\caption{Training and validation accuracy and loss of Alexnet}
+	\label{fig:alexnet}
+\end{figure}
+
+The training stops after about 8-10 epochs where we get validation loss around 0.36 and validation accuracy around 0.87. 
+Looking at these plots we can see that, as expected, training loss goes to zero while validation loss reaches a plateau and it starts to slightly increase, so we stopped the training.
+A similar consideration can be done for the accuracy: the training one goes to 1 while the validation one stops increasing after some epochs.
+
+Since the majority of the layers are  pretrained, their weights are already optimized to extract features from images and categorize them. Hence we need just a few iterations to tune the last layer's weights. Indeed the loss rapidly decreases and the accuracy rapidly increases.
+
+We evaluated the network on the test images and we get a test accuracy of about 0.86 (Figure \ref{fig:alexnetresults})
+
+\begin{figure}[h!]
+	\centering
+%	\includegraphics[width=\textwidth]{img/conf_finetune}
+	\caption{Confusion matrix of Alexnet}	
+	\label{fig:alexnetresults}
+\end{figure}
+%\includegraphics[width=0.3\textwidth]{img/test_accuracy_finetune}
+
+The majority of the test images are correctly classified, but we still have some misclassifications.
+It's interesting to see that some images are misclassified in classes which are kind of similar, for example we have some misclassifications between house rooms (bedroom-living room-kitchen) and between natural scenes (coast-forest-open country).
+
+\begin{thebibliography}{9}
+	
+	\bibitem{Lazebnik et al., 2006}
+	Lazebnik, S., Schmid, C., and Ponce, J.
+	\textit{Beyond bags of features: Spatial pyramid matching for recognizing natural scene
+	categories}
+	In 2006 IEEE Computer Society Conference on Computer Vision	and Pattern Recognition (CVPR’06), volume 2, pages 2169–2178.
+	
+	\bibitem{Ioffe and Szegedy, 2015}
+	Ioffe, S. and Szegedy, C.
+	\textit{Batch normalization: Accelerating deep network training by reducing internal covariate shift}
+	2015, arXiv	preprint arXiv:1502.03167
+	
+	\bibitem{Szegedy et al., 2015}
+	\textit{Going deeper with convolutions}
+	Szegedy, C., Liu, W., Jia, Y., Sermanet, P., Reed, S., Anguelov, D., Erhan, D., Vanhoucke, V., and Rabinovich, A. (2015). In The IEEE Conference on Computer Vision and Pattern Recognition (CVPR).
+	
+\end{thebibliography}
+
+
 \end{document}
 
