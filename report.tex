@@ -235,18 +235,21 @@ Combining the results of independent networks slightly increase our perormances 
 \section*{3. Transfer learning}
 \subsection*{3.1 Fine tuning}
 \subsubsection*{Problem statement}
-Build a multiclass classifier for our classification problem fine tuning a pretrained convolutional neural network.
+
+After having bettered our own neural network we wanted to build a multiclass classifier for our classification problem fine tuning a pretrained convolutional neural network.
 
 \subsubsection*{Approach}
-Take all layers of the chosen pretrained neural network except the last fully connected layer which will be substituted with a new one having suitable output size. Learn only the weights of this last layer freezing all the others. Evaluate the performance of the trained classifier on the test set using the same testing functions as in section 1.
+In order to perform fine tuning we took all layers of the chosen pretrained neural network except the last fully connected layer which we substituted with a new one having suitable output size. It was only needed to learn the weights of this last layer freezing all the others. Finally we evaluated the performance of the trained classifier on the test set using the same testing functions as in Section 1.
 
-\subsubsection*{Implementation choices:}
-We choose to use Alexnet, a convolutional neural network trained on the ImageNet dataset (1.2 million high-resolution images belonging to 1000 categories). 
-In the following table we can see the architecture of pretrained Alexnet available on pytorch:
+\subsubsection*{Implementation choices}
+We chose to use Alexnet, a convolutional neural network trained on the ImageNet dataset (1.2 million high-resolution images belonging to 1000 categories).
+
+In the Table \ref{tab:alexnet} we can see the architecture of pretrained Alexnet available on pytorch:
 
 % alexnet architecture 
 \begin{table}[h!]
 	\centering
+	\caption{Structure of Alexnet}
 	\begin{tabular}{lll}
 		\# & Type & Size \\
 		\midrule
@@ -276,7 +279,7 @@ In the following table we can see the architecture of pretrained Alexnet availab
 		6 & ReLu & \\
 		7 & Fully connected & 1000 \\
 		\bottomrule
-		\label{tab:baseline}
+		\label{tab:alexnet}
 	\end{tabular}
 \end{table}
 
@@ -289,14 +292,14 @@ In order to enter this network images need to be preprocessed in the same way th
 	\item resize each image to $[224,224,3]$ performing anisotropic rescaling
 \end{itemize}
 
-In order to perform image preprocessing we use the dataloaders used in section 1, we only need to change the transformation to be applied when images are loaded.
+In order to perform image preprocessing we used the dataloaders used in Section 1, we only needed to change the transformation to be applied when images are loaded.
 
-We substitute the last fully connected layer having output size 1000 with one having output size 15, the number of our classes. In order to train only the last layer we need to pass to the optimizer only the parameters to be learned: weights and bias of this last layer. Then training and test phases are carried on as in section 1, we are still using cross-entropy loss and stochastic gradient descent with momuntum (learning rate 0.001 and momentum 0.9).
-Also in this case we initialize the weights using a gaussian distribution with mean 0 and standard deviation 0.01.
+We substituted the last fully connected layer having output size 1000 with one having output size 15, the number of our classes. In order to train only the last layer we need to pass to the optimizer only the parameters to be learned: weights and bias of this last layer. Then training and test phases are carried on as in Section 1, we still used cross-entropy loss and stochastic gradient descent with momuntum (learning rate 0.001 and momentum 0.9).\\
+Also in this case we initialized the weights using a gaussian distribution with mean 0 and standard deviation 0.01.
 
 \subsubsection*{Results}
 
-We use again early stopping based on validation loss to avoid overfitting and reduce the computational cost, setting the patience parameter to 20. Loss and accuracy on training and validation sets are reported (Figure \ref{fig:finetune}).
+We used again early stopping based on validation loss to avoid overfitting and reduce the computational cost, setting the patience parameter to 20. Loss and accuracy on training and validation sets are reported in Figure \ref{fig:finetune}.
 
 % two training plots
 \begin{figure}[h!]
@@ -307,38 +310,42 @@ We use again early stopping based on validation loss to avoid overfitting and re
 	\label{fig:finetune}
 \end{figure}
 
-The training stops after about 8-10 epochs where we get validation loss around 0.36 and validation accuracy around 0.87. 
-Looking at these plots I can see that, as expected, training loss goes to zero while validation loss reaches a plateau and it starts to slightly increase, so we stop the training.
+The training stopped after about 8-10 epochs where we get validation loss around 0.36 and validation accuracy around 0.87. \\
+Looking at these plots we can see that, as expected, training loss goes to zero while validation loss reaches a plateau and it starts to slightly increase, so we stop the training.
 A similar consideration can be done for the accuracy: the training one goes to 1 while the validation one stops increasing after some epochs.
 
-Since the majority of the layers are  pretrained, they weights are already optimized to extract features from images and categorize them. Hence we need just a few iterations to tune the last layer's weights. Indeed the loss rapidly decreases and the accuracy rapidly increases
+Since the majority of the layers are  pretrained, they weights were already optimized to extract features from images and categorize them. Hence we just needed few iterations to tune the last layer's weights. Indeed the loss rapidly decreased and the accuracy rapidly increased.
 
-We can now evaluate the network on the test images and we get a test accuracy of about 0.86:
+We evaluated the network on the test images and we got a test accuracy of about 0.86 (Figure \ref{fig:alexnetresults})
 
-\begin{center}
-	\includegraphics[width=\textwidth]{img/conf_finetune.png}	
-\end{center}
-\includegraphics[width=0.3\textwidth]{img/test_accuracy_finetune.png}
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{img/conf_finetune}
+	\caption{Confusion matrix of the finetuned Alexnet}	
+	\label{fig:alexnetresults}
+\end{figure}
 
 The majority of the test images are correctly classified, but we still have some misclassifications.
-It's interesting to see that some images are misclassified in classes which are kind of similar, for example I have some misclassifications between house rooms (bedroom-living room-kitchen) and between natural scenes (coast-forest-open country).
+It's interesting to see that some images are misclassified in classes which are kind of similar, for example we have some misclassifications between house rooms (bedroom-living room-kitchen) and between natural scenes (coast-forest-open country).
 
 \subsection*{3.2 CNN as feature extractor + SVM}
 
 \subsubsection*{Problem statement}
-Use a pretrained convolutional neural network to extract features from an image and then train a multiclass classifier based on support vector machines.
+To conclude we used a pretrained convolutional neural network to extract features from an image and then trained a multiclass classifier based on support vector machines.
 
 \subsubsection*{Approach}
-The feature vector is extracted accessing the activations of an intermediate layer of the pretrained neural network.
-The multiclass classification problem is faced using pairwise linear svm with decision tree. 
-First we learn a classifier for each pair of classes, then each node of the decision tree will perform the classification of an image using one of the trained binary classifiers. 
-The classification will then continue on the left or right subtree where the 'losing' class is excluded. We proceed in this way until we are left with only two possible classes, the predicted class is the output of this last classifier.
+
+The feature vector was extracted accessing the activations of an intermediate layer of the pretrained neural network. The multiclass classification problem was faced using pairwise linear svm with decision tree. 
+
+First a classifier for each pair of classes is learned, then each node of the decision tree will perform the classification of an image using one of the trained binary classifiers. The classification will then continue on the left or right subtree where the 'losing' class is excluded. We proceed in this way until we are left with only two possible classes, the predicted class is the output of this last classifier.
 
 \subsubsection*{Implementation choices}
-We use again Alexnet to extract a vector of features from each image. In particular we use just the 'feature' layers of the net, here the architecture
+
+We used again Alexnet to extract a vector of features from each image. In particular we used just the 'feature' layers of the net. the architecture is reported in Table \ref{tab:SVM}.
 
 \begin{table}[h!]
 	\centering
+	\caption{Structure of the layers of Alexnet used to extract feature vector}
 	\begin{tabular}{lll}
 		\# & Type & Size \\
 		\midrule
@@ -356,12 +363,13 @@ We use again Alexnet to extract a vector of features from each image. In particu
 		11 & ReLu & \\
 		12 & Max Pooling & 3x3 max pooling with stride 2 \\
 		\bottomrule
-		\label{tab:baseline}
+		\label{tab:SVM}
 	\end{tabular}
 \end{table}
 
-We will get feature vectors of length 9216 which are used to train a multiclass support vector machine classifier. 	
-First let's discuss the construction of the decision tree, then we will focus on how to train each binary classifiers.
+Feature vectors of length 9216 are obtained and used to train a multiclass support vector machine classifier. 	
+
+Firstly let's discuss the construction of the decision tree, then we will focus on how to train each binary classifiers.
 
 \begin{description}
 	\item[\textbf{Decision tree:}] 
@@ -371,16 +379,16 @@ First let's discuss the construction of the decision tree, then we will focus on
 	In this way we can start building the tree from the root in a recursive way: we use a specific function that given the list of classes selects the most separable two, builds the node and sets as right and left children two nodes built in the same way but operating on the sublists in which one of the two selected classes is removed.
 	The recursive calls terminate when we have to build a node from a list with just two classes. In this case the node will not have any children.
 	
-	Once the tree is built I need a way to perform a binary classification on each node. In this way an image can go through the tree and be classified.
-	In order to do this each node has an evaluate function which, given the image and the two classes, accesses the correspondent binary classifier and decides if to send the image to the left child or to the right child. In the new node it will be evaluated again in the same way until a leaf is reached and we will get the predicted class. 
+	Once the tree is built we need a way to perform a binary classification on each node. In this way an image can go through the tree and be classified.
+	In order to do this each node has an evaluate function which, given the image and the two classes, accesses the correspondent binary classifier and decides if send the image to the left child or to the right child. In the new node it will be evaluated again in the same way until a leaf is reached and we will get the predicted class. 
 	
-	I cannot process a batch of testing images all together because each image will follow a different path and go through 14 classifiers regardless the path.
+	We cannot process a batch of testing images all together because each image will follow a different path and go through 14 classifiers regardless the path.
 	This causes the testing phase to significantly slow down.
 	
 	The evaluation in each node corresponds to the decision function of a binary classifier. Hence now we need to discuss how to build each svm classifier and the correspondent decision function.
 	
 	
-	\item[\textbf{Pairwise svm:}] Since we need to manage images of just two classes we don't use the training dataloaders as in section 1 but we load the whole dataset (relatively small), accessing then just the needed images for each classifier. In this way we can avoid to load many times the same images in memory.
+	\item[\textbf{Pairwise svm:}] Since we need to manage images of just two classes we don't use the training dataloaders as in Section 1 but we load the whole dataset (relatively small), accessing then just the needed images for each classifier. In this way we can avoid to load many times the same images in memory.
 	
 	The training of the svm classifier consist in solving the following quadratic programming problem (dual formulation):
 	$$
@@ -391,7 +399,7 @@ First let's discuss the construction of the decision tree, then we will focus on
 	0\leq \alpha_i \leq C, \forall i=1,...,l
 	$$
 	
-	Thanks to the library cvxopt, setting the parameter C equal to 1 and deciding which kernel to use we are able to solve this optimization and to find the vector $\alpha$.
+	Thanks to the library cvxopt, by setting the parameter C equal to 1 and deciding which kernel to use we are able to solve this optimization and to find the vector $\alpha$.
 	In the first place we work with the linear kernel and we can identify the support vectors as the ones having $alpha$ significantly different from 0 ($\geq 1e-6$).
 	The threshold has been chosen empirically looking at the vector $\alpha$ and we use the linear kernel $k(x_i,x_j)= <x_,x_j>$.
 	
@@ -419,14 +427,17 @@ Now we are able to train all the pairwise svm, build the decision tree and evalu
 
 
 \subsubsection*{Results}
-Using the classifier with the linear kernel gives us a test accuracy of about 87\%:
 
-\begin{center}
-	\includegraphics[width=\textwidth]{img/confusion_multiclassSVM.png}	
-\end{center}
-\includegraphics[width=0.3\textwidth]{img/test_accuracy_multiSVM.png}
+Using the classifier with the linear kernel gives us a test accuracy of about 87\%.
 
-The confusion matrix is very similar to the one obtained finetuning Alexnet, also the classes which are misclassified the most are the same.
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{img/confusion_multiclassSVM}
+	\caption{Confusion matrix of the multiclass SVM classifier}	
+	\label{fig:svm}
+\end{figure}
+
+The confusion matrix (Figure \ref{fig:svm}) is very similar to the one obtained finetuning Alexnet, also the classes which are misclassified the most are the same.
 
 \begin{thebibliography}{9}
 	
