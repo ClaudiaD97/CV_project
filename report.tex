@@ -142,6 +142,30 @@ The test accuracy of this network is around 37\%, which is to say almost 7-8\% b
 
 Looking at the confusion matrix (Figure \ref{fig:augcmatrix}) we can see that there are still some misclassifiactions. Expecially the network classifies the 'Open County' as 'Coast' quite often. Nevertheless they are both natural environments, so the error is quite understandable, evan a human being could get them wrong.
 
+After this first attempt we decided to perform more data augmentation. Hence we performed a random crop transformation of size $200x200$ to the images of the training set before the resize one. Then, during the training phase, in order to double the batches, we applied, not only the horizontal flip, but also a random rotation of $5$ degrees.\\
+We tried to implement those functions by ourself and we obtained a functioning version of each of them. Nevertheless our functions results to be quite inefficient so, in order to spend less time to train the network we decided to use the altready implemented functions of Python (torchvision package). 
+
+The training of the network resulted to be much slower then before. Indeed we increase the number of epochs, performing $50$ of them, ad set the patience to $35$. With these parameters we obtained good results.
+ 
+\begin{figure}[h!]
+	\centering
+ 	{\includegraphics[width=.49\textwidth]{img/aug2_accuracy}}
+ 	{\includegraphics[width=.49\textwidth]{img/aug2_loss}}
+ 	\caption{Training and validation accuracy and loss of the basline with data augmentation}
+ 	\label{fig:augmented2}
+\end{figure}
+
+As we can see in Figure \ref{fig:augmented2} there seems not to be overfittin. Indeed the validation loss does not significantly increase whereas the validation accuracy tends to grow linearly. Looking at these plots the acheved results seems to be better then before.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.9\textwidth]{img/aug2_cmatrix}
+	\caption{Confusion matrix of the baseline with data augmentation}
+	\label{fig:augcmatrix2}
+\end{figure}
+
+We tested the network on the test data and the results confirmed our expectations. We obtained a test accuracy around 45\%. Looking at the confusion matrix (Figure \ref{fig:augcmatrix2}) we can see that the network performs significantly better on some classes, such as Mountain and Open Countri. Nevertheless there are still some misclassification problems.
+
 \subsection*{2.2 Other improvements}
 
 \subsubsection*{Description of the approach}
