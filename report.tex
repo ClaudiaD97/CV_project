@@ -242,7 +242,7 @@ After having bettered our own neural network we wanted to build a multiclass cla
 In order to perform fine tuning we took all layers of the chosen pretrained neural network except the last fully connected layer which we substituted with a new one having suitable output size. It was only needed to learn the weights of this last layer freezing all the others. Finally we evaluated the performance of the trained classifier on the test set using the same testing functions as in Section 1.
 
 \subsubsection*{Implementation choices}
-We chose to use Alexnet, a convolutional neural network trained on the ImageNet dataset (1.2 million high-resolution images belonging to 1000 categories).
+We chose to use Alexnet, a convolutional neural network trained on the ImageNet dataset (1.2 million high-resolution images belonging to 1000 categories) proposed by Krizhevsky in 2012 \cite{Krizhevsky}.
 
 In the Table \ref{tab:alexnet} we can see the architecture of pretrained Alexnet available on pytorch:
 
@@ -314,19 +314,19 @@ The training stopped after about 8-10 epochs where we get validation loss around
 Looking at these plots we can see that, as expected, training loss goes to zero while validation loss reaches a plateau and it starts to slightly increase, so we stop the training.
 A similar consideration can be done for the accuracy: the training one goes to 1 while the validation one stops increasing after some epochs.
 
-Since the majority of the layers are  pretrained, they weights were already optimized to extract features from images and categorize them. Hence we just needed few iterations to tune the last layer's weights. Indeed the loss rapidly decreased and the accuracy rapidly increased.
+Since the majority of the layers are  pretrained, they weights were already optimized to extract features from images and categorize them. Hence we just needed few iterations to tune the last layer's weights. Indeed the loss rapidly decreased and the accuracy rapidly increased during first epochs.
 
-We evaluated the network on the test images and we got a test accuracy of about 0.86 (Figure \ref{fig:alexnetresults})
+We evaluated the network on the test images and we got a test accuracy of about 0.86. In Figure \ref{fig:alexnetresults} the confusion matrix is reported
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=\textwidth]{img/conf_finetune}
+	\includegraphics[width=0.8\textwidth]{img/conf_finetune}
 	\caption{Confusion matrix of the finetuned Alexnet}	
 	\label{fig:alexnetresults}
 \end{figure}
 
 The majority of the test images are correctly classified, but we still have some misclassifications.
-It's interesting to see that some images are misclassified in classes which are kind of similar, for example we have some misclassifications between house rooms (bedroom-living room-kitchen) and between natural scenes (coast-forest-open country).
+It's interesting to see that some images are misclassified in classes which are kind of similar, for example we have some misclassifications among house rooms (bedroom-living room-kitchen) and natural scenes (coast-forest-open country).
 
 \subsection*{3.2 CNN as feature extractor + SVM}
 
@@ -432,12 +432,46 @@ Using the classifier with the linear kernel gives us a test accuracy of about 87
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=\textwidth]{img/confusion_multiclassSVM}
+	\includegraphics[width=0.8\textwidth]{img/confusion_multiclassSVM}
 	\caption{Confusion matrix of the multiclass SVM classifier}	
 	\label{fig:svm}
 \end{figure}
 
 The confusion matrix (Figure \ref{fig:svm}) is very similar to the one obtained finetuning Alexnet, also the classes which are misclassified the most are the same.
+
+We've also tried to implement the SVM classifier using a different kernel. In particular we will present the results using a polynomial kernel of degree 2 and 3, and a gaussian kernel. 
+\begin{description}
+	\item[Polynomial kernel] In this case we substitute the linear kernel in both training and decision functions with the polynomial one having the form:
+	$$
+	k(x,x') = <x,x'>^d
+	$$
+	We tried with $d=2$ and $d=3$. The obtained test accuracies are respectively 0.86\% and 0.83\%. In Figure \ref{fig:poly23} the confusion matrices are reported.
+	\begin{figure}[h!]
+		\centering
+		{\includegraphics[width=.49\textwidth]{img/polynomial2.png}}
+		{\includegraphics[width=.49\textwidth]{img/polynomial3.png}}
+		\caption{Accuracy matrices using polynomial kernel of degree 2 and 3}
+		\label{fig:poly23}
+	\end{figure}
+	\item[Gaussian kernel] The used kernel has now the form:
+	$$
+	k(x,x') = exp\{-\frac{||x-x'||^2}{c}\}
+	$$
+	In this case we obtained a test accuracy of about 87\%, the confusion matrix is reported in Figure \ref{fig:gaussianKernel}.
+	
+	\begin{figure}[h!]
+		\centering
+		{\includegraphics[width=.8\textwidth]{img/gaussian.png}}
+		\caption{Confusion matrix using gaussian kernel $c=10^5$}
+		\label{fig:gaussianKernel}
+	\end{figure}
+\end{description}
+
+The hardest part of using different kernels was to play with parameters to find configuration given better performance, and probably we haven't find yet the best values.
+Using polynomial kernel we get a lower accuracy with respect to the linear kernel one, which makes us think that we are overfitting. But also using a lower value for C (which should give a larger generalization capability) we get the same results.
+
+Also using the gaussian kernel we are not able to improve the performance of the classifier. Regardless the choice of the kernel, the classes which are misclassified the most remain always the same, indicating that with none of these kernels we are able to properly separate them.
+Possible improvements for this approach is to tune the parameters of the kernel for each pairwise classifier, since up to now we've used the same values for all the binary classifiers.
 
 \begin{thebibliography}{9}
 	
@@ -456,7 +490,10 @@ The confusion matrix (Figure \ref{fig:svm}) is very similar to the one obtained 
 	\textit{Going deeper with convolutions}
 	Szegedy, C., Liu, W., Jia, Y., Sermanet, P., Reed, S., Anguelov, D., Erhan, D., Vanhoucke, V., and Rabinovich, A. (2015). In The IEEE Conference on Computer Vision and Pattern Recognition (CVPR).
 	
+	\bibitem{Krizhevsky} 
+	Krizhevsky, A. Sutskever, I., and Hinton, G E. (2012). Imagenet classification with deep convolutional neural networks. In \textit{Advances in neural information processing systems}, pages 1097-1105
 \end{thebibliography}
+
 
 
 \end{document}
