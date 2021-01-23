@@ -340,17 +340,19 @@ A similar consideration can be done for the accuracy: the training one goes to 1
 
 Since the majority of the layers are  pretrained, they weights were already optimized to extract features from images and categorize them. Hence we just needed few iterations to tune the last layer's weights. Indeed the loss rapidly decreased and the accuracy rapidly increased during first epochs.
 
-We evaluated the network on the test images and we got a test accuracy of about 0.86. In Figure \ref{fig:alexnetresults} the confusion matrix is reported
+We evaluated the network on the test images and we got a test accuracy of about 0.86. In order to improve the test accuracy of our classifier we tried to perform data augmentation as described in section 2.1. We still obtain a test accuracy around 87\%, so we don't get any significant improvement. In Figure \ref{fig:alexnetresults} the confusion matrices for both cases are reported but they are almost identical.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.8\textwidth]{img/conf_finetune}
-	\caption{Confusion matrix of the finetuned Alexnet}	
+	\includegraphics[width=0.49\textwidth]{img/conf_finetune}
+	\includegraphics[width=0.49\textwidth]{img/alexnet_augmented.png}
+	\caption{Confusion matrix of the finetuned Alexnet without and with data augmentation}	
 	\label{fig:alexnetresults}
 \end{figure}
 
 The majority of the test images are correctly classified, but we still have some misclassifications.
 It's interesting to see that some images are misclassified in classes which are kind of similar, for example we have some misclassifications among house rooms (bedroom-living room-kitchen) and natural scenes (coast-forest-open country).
+
 
 \subsection*{3.2 CNN as feature extractor + SVM}
 
@@ -457,7 +459,7 @@ Using the classifier with the linear kernel gives us a test accuracy of about 87
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.8\textwidth]{img/confusion_multiclassSVM}
-	\caption{Confusion matrix of the multiclass SVM classifier}	
+	\caption{Confusion matrix of the multiclass linear SVM classifier}	
 	\label{fig:svm}
 \end{figure}
 
@@ -474,7 +476,7 @@ We've also tried to implement the SVM classifier using a different kernel. In pa
 		\centering
 		{\includegraphics[width=.49\textwidth]{img/polynomial2.png}}
 		{\includegraphics[width=.49\textwidth]{img/polynomial3.png}}
-		\caption{Accuracy matrices using polynomial kernel of degree 2 and 3}
+		\caption{Confusion matrices using polynomial kernel of degree 2 and 3}
 		\label{fig:poly23}
 	\end{figure}
 	\item[Gaussian kernel] The used kernel has now the form:
